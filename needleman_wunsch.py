@@ -148,8 +148,10 @@ def needleman_wunsch(seq1: str, seq2: str,
     # ── FASE 1: Inizializzazione della matrice di scoring ──────────────────
     # F[i][j] rappresenta il punteggio ottimo per allineare
     # seq1[0..i-1] con seq2[0..j-1]
+    # Nota: si usano liste Python anziché np.array per prestazioni migliori
+    # (l'accesso scalare a liste è ~5-10× più veloce di numpy in loop Python)
 
-    F = np.zeros((n + 1, m + 1), dtype=int)
+    F = [[0] * (m + 1) for _ in range(n + 1)]
 
     # Prima colonna: allineare seq1[0..i-1] con stringa vuota → solo gap
     for i in range(1, n + 1):
@@ -225,7 +227,7 @@ def needleman_wunsch(seq1: str, seq2: str,
 # FUNZIONI DI VISUALIZZAZIONE
 # ──────────────────────────────────────────────────────────────────────────────
 
-def stampa_matrice(F: np.ndarray, seq1: str, seq2: str) -> None:
+def stampa_matrice(F, seq1: str, seq2: str) -> None:
     """Stampa la matrice di scoring in formato tabella leggibile."""
 
     # Intestazioni colonna: ε (stringa vuota) + caratteri di seq2
@@ -235,8 +237,11 @@ def stampa_matrice(F: np.ndarray, seq1: str, seq2: str) -> None:
     righe = []
     row_labels = ["ε"] + list(seq1)
 
-    for i in range(F.shape[0]):
-        riga = [row_labels[i]] + [int(F[i][j]) for j in range(F.shape[1])]
+    n_righe = len(F)
+    n_colonne = len(F[0]) if n_righe > 0 else 0
+
+    for i in range(n_righe):
+        riga = [row_labels[i]] + [int(F[i][j]) for j in range(n_colonne)]
         righe.append(riga)
 
     print("\n📊 Matrice di Scoring F:")
@@ -263,7 +268,7 @@ def stampa_allineamento(align1: str, align2: str, score: int) -> None:
     print(f"  Seq2: {align2}")
 
 
-def stampa_sottostruttura_ottima(F: np.ndarray, seq1: str, seq2: str) -> None:
+def stampa_sottostruttura_ottima(F, seq1: str, seq2: str) -> None:
     """
     Mostra la proprietà di sottostruttura ottima della programmazione dinamica:
     il valore ottimo F[i][j] dipende solo dai sottoproblemi già risolti
