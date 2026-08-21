@@ -29,9 +29,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from tabulate import tabulate
 
-# Importare i tre algoritmi
-from needleman_wunsch import needleman_wunsch
-from needleman_wunsch_ottimizzato import nw_score_lineare, hirschberg
+# Importare i tre algoritmi (versione Cython compilata per velocità)
+from nw_core import needleman_wunsch, nw_score_lineare, hirschberg
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -60,7 +59,7 @@ DIMENSIONI_TUTTI = [50, 100, 200, 300, 500, 750, 1000, 1500, 2000]
 
 # Dimensioni aggiuntive SOLO per le varianti ottimizzate
 # (l'algoritmo base non può gestirle per limiti di memoria)
-DIMENSIONI_SOLO_OTTIMIZZATI = [3000, 5000, 7500, 10000]
+DIMENSIONI_SOLO_OTTIMIZZATI = [3000, 5000, 7500, 10000, 100000, 1000000]
 
 # Numero di ripetizioni per ogni dimensione (per ridurre la varianza)
 NUM_RIPETIZIONI = 3
@@ -593,44 +592,44 @@ if __name__ == "__main__":
     # FASE 1: Benchmark di tutti e tre gli algoritmi (dimensioni moderate)
     # ══════════════════════════════════════════════════════════════════════
 
-    # print("\n" + "─" * 85)
-    # print("  FASE 1: Confronto completo (tutti e tre gli algoritmi)")
-    # print(f"  Dimensioni: {DIMENSIONI_TUTTI}")
-    # print(f"  Ripetizioni per dimensione: {NUM_RIPETIZIONI}")
-    # print("─" * 85)
+    print("\n" + "─" * 85)
+    print("  FASE 1: Confronto completo (tutti e tre gli algoritmi)")
+    print(f"  Dimensioni: {DIMENSIONI_TUTTI}")
+    print(f"  Ripetizioni per dimensione: {NUM_RIPETIZIONI}")
+    print("─" * 85)
 
-    # # Definire i wrapper per i tre algoritmi
-    # algoritmi_tutti = {
-    #     "NW Base": lambda s1, s2: needleman_wunsch(
-    #         s1, s2, match=MATCH, mismatch=MISMATCH, gap=GAP
-    #     ),
-    #     "NW Spazio Lineare": lambda s1, s2: nw_score_lineare(
-    #         s1, s2, match=MATCH, mismatch=MISMATCH, gap=GAP
-    #     ),
-    #     "Hirschberg": lambda s1, s2: hirschberg(
-    #         s1, s2, match=MATCH, mismatch=MISMATCH, gap=GAP
-    #     ),
-    # }
+    # Definire i wrapper per i tre algoritmi
+    algoritmi_tutti = {
+        "NW Base": lambda s1, s2: needleman_wunsch(
+            s1, s2, match=MATCH, mismatch=MISMATCH, gap_penalty=GAP
+        ),
+        "NW Spazio Lineare": lambda s1, s2: nw_score_lineare(
+            s1, s2, match=MATCH, mismatch=MISMATCH, gap_penalty=GAP
+        ),
+        "Hirschberg": lambda s1, s2: hirschberg(
+            s1, s2, match=MATCH, mismatch=MISMATCH, gap_penalty=GAP
+        ),
+    }
 
-    # risultati_tutti = esegui_benchmark(
-    #     DIMENSIONI_TUTTI, algoritmi_tutti, NUM_RIPETIZIONI, SEED
-    # )
+    risultati_tutti = esegui_benchmark(
+        DIMENSIONI_TUTTI, algoritmi_tutti, NUM_RIPETIZIONI, SEED
+    )
 
-    # # Stampare la tabella riassuntiva
-    # stampa_tabella_risultati(risultati_tutti,
-    #                         "RISULTATI — Confronto completo (3 algoritmi)")
+    # Stampare la tabella riassuntiva
+    stampa_tabella_risultati(risultati_tutti,
+                            "RISULTATI — Confronto completo (3 algoritmi)")
 
-    # # Generare i grafici
-    # grafico_tempo(risultati_tutti,
-    #               "Confronto Tempo di Esecuzione — Tutti gli Algoritmi",
-    #               "grafico_tempo_tutti.png")
+    # Generare i grafici
+    grafico_tempo(risultati_tutti,
+                  "Confronto Tempo di Esecuzione — Tutti gli Algoritmi",
+                  "grafico_tempo_tutti.png")
 
-    # grafico_memoria(risultati_tutti,
-    #                 "Confronto Occupazione di Memoria — Tutti gli Algoritmi",
-    #                 "grafico_memoria_tutti.png")
+    grafico_memoria(risultati_tutti,
+                    "Confronto Occupazione di Memoria — Tutti gli Algoritmi",
+                    "grafico_memoria_tutti.png")
 
-    # grafico_rapporto(risultati_tutti,
-    #                  "grafico_rapporto_asintotico.png")
+    grafico_rapporto(risultati_tutti,
+                     "grafico_rapporto_asintotico.png")
 
     # ══════════════════════════════════════════════════════════════════════
     # FASE 2: Solo varianti ottimizzate su dimensioni grandi
@@ -644,10 +643,10 @@ if __name__ == "__main__":
 
     algoritmi_ottimizzati = {
         "NW Spazio Lineare": lambda s1, s2: nw_score_lineare(
-            s1, s2, match=MATCH, mismatch=MISMATCH, gap=GAP
+            s1, s2, match=MATCH, mismatch=MISMATCH, gap_penalty=GAP
         ),
         "Hirschberg": lambda s1, s2: hirschberg(
-            s1, s2, match=MATCH, mismatch=MISMATCH, gap=GAP
+            s1, s2, match=MATCH, mismatch=MISMATCH, gap_penalty=GAP
         ),
     }
 
