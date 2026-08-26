@@ -1,0 +1,9 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Cython build artifacts
+build/
+*.c
+*.so

@@ -11,8 +11,8 @@ implementati nei file precedenti:
   3. Hirschberg        — O(n·m) tempo, O(min(n,m)) spazio  (score + allineamento)
 
 Per ogni algoritmo e per ogni dimensione delle istanze, si misurano:
-  • Tempo di esecuzione  (time.perf_counter)
-  • Occupazione di memoria  (tracemalloc)
+  • Tempo di esecuzione
+  • Occupazione di memoria
 
 I risultati vengono poi confrontati con la crescita attesa dall'analisi
 asintotica (O(n·m) per il tempo, O(n·m) o O(n) per lo spazio) e
@@ -29,7 +29,6 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from tabulate import tabulate
 
-# Importare i tre algoritmi (versione Cython compilata per velocità)
 from nw_core import needleman_wunsch, nw_score_lineare, hirschberg
 
 
@@ -48,18 +47,11 @@ ALFABETO = "ACGT"
 # Seed per la riproducibilità
 SEED = 42
 
-# ── Dimensioni delle istanze ─────────────────────────────────────────────────
-# Per l'algoritmo base (O(n·m) spazio) usiamo dimensioni più piccole
-# perché richiede molta memoria. Per le varianti ottimizzate possiamo
-# spingerci a dimensioni molto maggiori.
-
 # Dimensioni per il confronto tra TUTTI e tre gli algoritmi
-# (limitate dalla memoria dell'algoritmo base)
 DIMENSIONI_TUTTI = [50, 100, 200, 300, 500, 750, 1000, 1500, 2000]
 
 # Dimensioni aggiuntive SOLO per le varianti ottimizzate
-# (l'algoritmo base non può gestirle per limiti di memoria)
-DIMENSIONI_SOLO_OTTIMIZZATI = [3000, 5000, 7500, 10000, 100000, 1000000]
+DIMENSIONI_SOLO_OTTIMIZZATI = [3000, 5000, 7500, 10000, 100000]
 
 # Numero di ripetizioni per ogni dimensione (per ridurre la varianza)
 NUM_RIPETIZIONI = 3
@@ -70,26 +62,10 @@ NUM_RIPETIZIONI = 3
 # ══════════════════════════════════════════════════════════════════════════════
 
 def genera_sequenza_casuale(lunghezza: int, rng: random.Random) -> str:
-    """
-    Genera una sequenza casuale di DNA di lunghezza data.
-
-    Parametri
-    ----------
-    lunghezza : int — lunghezza della sequenza da generare
-    rng : random.Random — generatore di numeri casuali (per riproducibilità)
-
-    Restituisce
-    -----------
-    str : sequenza casuale composta da caratteri in {A, C, G, T}
-    """
     return "".join(rng.choice(ALFABETO) for _ in range(lunghezza))
 
 
 def genera_coppia_istanze(lunghezza: int, rng: random.Random) -> tuple:
-    """
-    Genera una coppia di sequenze casuali di DNA della stessa lunghezza.
-    In questo modo n = m = lunghezza, e la complessità attesa è O(n²).
-    """
     seq1 = genera_sequenza_casuale(lunghezza, rng)
     seq2 = genera_sequenza_casuale(lunghezza, rng)
     return seq1, seq2
@@ -100,22 +76,6 @@ def genera_coppia_istanze(lunghezza: int, rng: random.Random) -> tuple:
 # ══════════════════════════════════════════════════════════════════════════════
 
 def misura_tempo_e_memoria(funzione, *args) -> tuple:
-    """
-    Esegue una funzione misurando tempo di esecuzione e picco di memoria.
-
-    Utilizza:
-      - time.perf_counter() per il tempo (alta risoluzione)
-      - tracemalloc per il picco di memoria allocata (in byte)
-
-    Parametri
-    ----------
-    funzione : callable — la funzione da misurare
-    *args — argomenti da passare alla funzione
-
-    Restituisce
-    -----------
-    tuple : (risultato, tempo_secondi, memoria_picco_byte)
-    """
     # Avviare il tracciamento della memoria
     tracemalloc.start()
 
@@ -134,27 +94,13 @@ def misura_tempo_e_memoria(funzione, *args) -> tuple:
 
 def esegui_benchmark(dimensioni: list, algoritmi: dict,
                      num_ripetizioni: int, seed: int) -> dict:
-    """
-    Esegue il benchmark completo per tutti gli algoritmi su tutte le dimensioni.
-
-    Parametri
-    ----------
-    dimensioni : list[int] — lista delle dimensioni da testare
-    algoritmi : dict — {nome: funzione_wrapper} per ogni algoritmo
-    num_ripetizioni : int — numero di ripetizioni per dimensione
-    seed : int — seed per la riproducibilità
-
-    Restituisce
-    -----------
-    dict : {nome_algoritmo: {"tempi": [...], "memorie": [...], "dimensioni": [...]}}
-    """
     risultati = {nome: {"tempi": [], "memorie": [], "dimensioni": []}
                  for nome in algoritmi}
 
     rng = random.Random(seed)
 
     for n in dimensioni:
-        print(f"\n  📏 Dimensione n = {n} ...")
+        print(f"\n  Dimensione n = {n} ...")
 
         for nome, funzione in algoritmi.items():
             tempi = []
@@ -171,13 +117,13 @@ def esegui_benchmark(dimensioni: list, algoritmi: dict,
                 tempi.append(tempo)
                 memorie.append(memoria)
 
-            # Salvare la mediana (più robusta della media ai valori anomali)
+            # Salvare la mediana
             risultati[nome]["tempi"].append(np.median(tempi))
             risultati[nome]["memorie"].append(np.median(memorie))
             risultati[nome]["dimensioni"].append(n)
 
             print(f"     {nome:20s}  →  "
-                  f"tempo: {np.median(tempi):.4f}s  |  "
+                  f"tempo: {np.median(tempi):.8f}s  |  "
                   f"memoria: {np.median(memorie) / 1024:.1f} KB")
 
     return risultati
@@ -188,7 +134,6 @@ def esegui_benchmark(dimensioni: list, algoritmi: dict,
 # ══════════════════════════════════════════════════════════════════════════════
 
 def configura_stile_grafici():
-    """Configura lo stile globale dei grafici matplotlib."""
     plt.rcParams.update({
         "figure.facecolor": "#1a1a2e",
         "axes.facecolor":   "#16213e",
@@ -206,14 +151,6 @@ def configura_stile_grafici():
         "axes.labelsize":   12,
     })
 
-
-# Colori per i tre algoritmi
-COLORI = {
-    "NW Base":          "#e94560",   # rosso corallo
-    "NW Spazio Lineare": "#0f3460",  # blu scuro → usiamo un celeste
-    "Hirschberg":       "#53d769",   # verde
-}
-# Aggiorniamo i colori per visibilità su sfondo scuro
 COLORI = {
     "NW Base":           "#e94560",
     "NW Spazio Lineare": "#48bfe3",
@@ -228,10 +165,6 @@ MARCATORI = {
 
 
 def grafico_tempo(risultati: dict, titolo: str, nome_file: str):
-    """
-    Crea il grafico del tempo di esecuzione vs dimensione dell'istanza,
-    con la curva teorica O(n²) sovrapposta per il confronto.
-    """
     configura_stile_grafici()
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
     fig.suptitle(titolo, fontsize=16, fontweight="bold", color="#eaeaea")
@@ -288,14 +221,10 @@ def grafico_tempo(risultati: dict, titolo: str, nome_file: str):
     plt.savefig(nome_file, dpi=150, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     plt.close()
-    print(f"\n  📊 Grafico salvato: {nome_file}")
+    print(f"\n Grafico salvato: {nome_file}")
 
 
 def grafico_memoria(risultati: dict, titolo: str, nome_file: str):
-    """
-    Crea il grafico dell'occupazione di memoria vs dimensione,
-    con le curve teoriche O(n²) e O(n) sovrapposte.
-    """
     configura_stile_grafici()
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
     fig.suptitle(titolo, fontsize=16, fontweight="bold", color="#eaeaea")
@@ -367,15 +296,10 @@ def grafico_memoria(risultati: dict, titolo: str, nome_file: str):
     plt.savefig(nome_file, dpi=150, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     plt.close()
-    print(f"  📊 Grafico salvato: {nome_file}")
+    print(f" Grafico salvato: {nome_file}")
 
 
 def grafico_rapporto(risultati: dict, nome_file: str):
-    """
-    Crea un grafico del rapporto T(n)/n² per verificare che tenda
-    a una costante (conferma della complessità O(n²)).
-    Se T(n) = Θ(n²), allora T(n)/n² → c (costante).
-    """
     configura_stile_grafici()
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
     fig.suptitle("Verifica asintotica: T(n)/n² e M(n)/n² devono tendere a una costante",
@@ -429,14 +353,10 @@ def grafico_rapporto(risultati: dict, nome_file: str):
     plt.savefig(nome_file, dpi=150, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     plt.close()
-    print(f"  📊 Grafico salvato: {nome_file}")
+    print(f" Grafico salvato: {nome_file}")
 
 
 def grafico_scalabilita_ottimizzati(risultati: dict, nome_file: str):
-    """
-    Grafico dedicato alle varianti ottimizzate su dimensioni grandi,
-    dove l'algoritmo base non può arrivare.
-    """
     configura_stile_grafici()
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle("Scalabilità delle varianti ottimizzate — Istanze di grandi dimensioni",
@@ -532,7 +452,7 @@ def grafico_scalabilita_ottimizzati(risultati: dict, nome_file: str):
     plt.savefig(nome_file, dpi=150, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     plt.close()
-    print(f"  📊 Grafico salvato: {nome_file}")
+    print(f" Grafico salvato: {nome_file}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -540,8 +460,6 @@ def grafico_scalabilita_ottimizzati(risultati: dict, nome_file: str):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def stampa_tabella_risultati(risultati: dict, titolo: str):
-    """Stampa una tabella riassuntiva dei risultati del benchmark."""
-
     print(f"\n{'=' * 85}")
     print(f"  {titolo}")
     print(f"{'=' * 85}")
@@ -650,7 +568,6 @@ if __name__ == "__main__":
         ),
     }
 
-    # Eseguire il benchmark SOLO sulle dimensioni aggiuntive
     risultati_fase2 = esegui_benchmark(
         DIMENSIONI_SOLO_OTTIMIZZATI, algoritmi_ottimizzati, NUM_RIPETIZIONI, SEED
     )
@@ -676,51 +593,15 @@ if __name__ == "__main__":
     # ══════════════════════════════════════════════════════════════════════
 
     print("\n" + "=" * 85)
-    print("  📊 RIEPILOGO DELLA SPERIMENTAZIONE")
+    print(" RIEPILOGO DELLA SPERIMENTAZIONE")
     print("=" * 85)
 
-    print("""
-  ┌─────────────────────────────────────────────────────────────────────────────┐
-  │                         CONCLUSIONI SPERIMENTALI                          │
-  ├─────────────────────────────────────────────────────────────────────────────┤
-  │                                                                           │
-  │  1. TEMPO DI ESECUZIONE                                                  │
-  │     • Tutti e tre gli algoritmi mostrano crescita quadratica O(n²),       │
-  │       confermata dal rapporto T(n)/n² che tende a una costante.           │
-  │     • NW Spazio Lineare è leggermente più veloce del Base                │
-  │       (migliore località di cache con sole 2 righe in memoria).           │
-  │     • Hirschberg è ~2× più lento del Base (costante moltiplicativa       │
-  │       dovuta alla ricorsione divide-et-impera), come previsto             │
-  │       dall'analisi teorica.                                               │
-  │                                                                           │
-  │  2. OCCUPAZIONE DI MEMORIA                                               │
-  │     • NW Base: crescita quadratica O(n²), come atteso.                   │
-  │       Per n=2000 usa decine di MB.                                        │
-  │     • NW Spazio Lineare e Hirschberg: crescita lineare O(n),             │
-  │       confermata dal rapporto M(n)/n costante.                            │
-  │       Per n=10000 usano pochi KB.                                         │
-  │     • La riduzione di memoria permette di elaborare istanze               │
-  │       di dimensioni 10-100× maggiori sullo stesso hardware.               │
-  │                                                                           │
-  │  3. TRADE-OFF                                                             │
-  │     • NW Spazio Lineare: massima velocità + minimo spazio,               │
-  │       ma restituisce solo lo score.                                       │
-  │     • Hirschberg: spazio lineare + allineamento completo,                │
-  │       al costo di ~2× nel tempo.                                          │
-  │     • La scelta dell'algoritmo dipende dall'applicazione:                 │
-  │       se serve solo lo score → NW Lineare                                 │
-  │       se serve l'allineamento → Hirschberg                                │
-  │       se n è piccolo e serve la matrice → NW Base                         │
-  │                                                                           │
-  └─────────────────────────────────────────────────────────────────────────────┘
-    """)
-
-    print("  📊 Grafici generati:")
+    print(" Grafici generati:")
     print("     • grafico_tempo_tutti.png         — Tempo (3 algoritmi)")
     print("     • grafico_memoria_tutti.png       — Memoria (3 algoritmi)")
     print("     • grafico_rapporto_asintotico.png — Verifica T(n)/n² → c")
     print("     • grafico_scalabilita_ottimizzati.png — Scalabilità ottimizzati")
 
     print("\n" + "=" * 85)
-    print("  ✅ Sperimentazione completata con successo")
+    print(" Sperimentazione completata con successo")
     print("=" * 85)

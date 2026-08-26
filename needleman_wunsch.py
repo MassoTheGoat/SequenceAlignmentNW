@@ -1,35 +1,10 @@
-"""
-Algoritmo di Needleman-Wunsch — Allineamento Globale di Sequenze
-
-Paradigma: Programmazione Dinamica
-Complessità temporale: O(n·m)   dove n = |seq1|, m = |seq2|
-Complessità spaziale: O(n·m)
-
-L'algoritmo costruisce una matrice di scoring F di dimensione (n+1)×(m+1),
-dove F[i][j] = score ottimo per allineare seq1[0..i-1] con seq2[0..j-1].
-
-Ricorrenza:
-  F[i][j] = max(
-      F[i-1][j-1] + score(seq1[i], seq2[j]),   (diagonale)
-      F[i-1][j]   + gap,                        (dall'alto)
-      F[i][j-1]   + gap                         (da sinistra)
-  )
-
-L'allineamento si ricostruisce con traceback da F[n][m] a F[0][0].
-"""
-
 import numpy as np
 from tabulate import tabulate
-
 
 def needleman_wunsch(seq1: str, seq2: str,
                      match: int = 1, mismatch: int = -1,
                      gap: int = -2) -> tuple:
-    """
-    Allineamento globale di due sequenze con Needleman-Wunsch.
 
-    Restituisce (score, align1, align2, F).
-    """
     n = len(seq1)
     m = len(seq2)
 
@@ -105,7 +80,7 @@ def stampa_matrice(F, seq1: str, seq2: str) -> None:
         riga = [row_labels[i]] + [int(F[i][j]) for j in range(n_colonne)]
         righe.append(riga)
 
-    print("\n📊 Matrice di Scoring F:")
+    print("\n Matrice di Scoring F:")
     print(tabulate(righe, headers=col_headers, tablefmt="fancy_grid",
                    stralign="center", numalign="center"))
 
@@ -121,7 +96,7 @@ def stampa_allineamento(align1: str, align2: str, score: int) -> None:
         else:
             match_line += "x"
 
-    print(f"\n🧬 Allineamento Globale Ottimo (score = {score}):\n")
+    print(f"\n Allineamento Globale Ottimo (score = {score}):\n")
     print(f"  Seq1: {align1}")
     print(f"        {match_line}")
     print(f"  Seq2: {align2}")
@@ -129,7 +104,7 @@ def stampa_allineamento(align1: str, align2: str, score: int) -> None:
 
 def stampa_sottostruttura_ottima(F, seq1: str, seq2: str) -> None:
     """Mostra la ricorrenza di programmazione dinamica."""
-    print("\n📐 Proprietà di Sottostruttura Ottima:")
+    print("\n Proprietà di Sottostruttura Ottima:")
     print("   F[i][j] = max(")
     print("       F[i-1][j-1] + score(seq1[i], seq2[j]),  // diagonale")
     print("       F[i-1][j]   + gap,                       // dall'alto")
@@ -181,5 +156,5 @@ if __name__ == "__main__":
     stampa_allineamento(align1_b, align2_b, score_b)
 
     print("\n" + "=" * 65)
-    print("  ✅ Algoritmo completato con successo")
+    print("Algoritmo completato con successo")
     print("=" * 65)

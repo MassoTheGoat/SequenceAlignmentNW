@@ -1,18 +1,3 @@
-"""
-Varianti Ottimizzate dell'Algoritmo di Needleman-Wunsch
-
-Variante 1 — NW Spazio Lineare (solo score):
-  Mantiene solo 2 righe della matrice anziché (n+1)×(m+1).
-  Tempo: O(n·m)  |  Spazio: O(min(n,m))
-  Limitazione: non può ricostruire l'allineamento (serve tutta la matrice).
-
-Variante 2 — Hirschberg (score + allineamento):
-  Combina NW spazio lineare con divide et impera.
-  Divide seq1 a metà, trova il punto di taglio ottimo j* su seq2
-  usando due passate NW (avanti e indietro), poi ricorre.
-  Tempo: O(n·m) con costante ~2×  |  Spazio: O(min(n,m))
-"""
-
 import numpy as np
 from tabulate import tabulate
 from needleman_wunsch import needleman_wunsch, stampa_allineamento
@@ -23,10 +8,7 @@ from needleman_wunsch import needleman_wunsch, stampa_allineamento
 def nw_score_lineare(seq1: str, seq2: str,
                      match: int = 1, mismatch: int = -1,
                      gap: int = -2) -> int:
-    """
-    Calcola lo score ottimo con spazio O(min(n,m)).
-    Usa solo 2 righe anziché la matrice completa.
-    """
+   
     # Righe lungo la sequenza più corta → spazio O(min(n,m))
     if len(seq1) < len(seq2):
         seq1, seq2 = seq2, seq1
@@ -81,14 +63,8 @@ def _nw_ultima_riga(seq1: str, seq2: str,
 def hirschberg(seq1: str, seq2: str,
                match: int = 1, mismatch: int = -1,
                gap: int = -2) -> tuple:
-    """
-    Allineamento globale ottimo in spazio lineare (Divide et Impera + DP).
-
-    Restituisce (score, align1, align2).
-    """
 
     def _allinea_singolo_carattere(x: str, y: str) -> tuple:
-        """Caso base: allinea x[0] con la posizione migliore in y."""
         m = len(y)
         miglior_score = (m + 1) * gap
         miglior_j = -1
@@ -106,7 +82,6 @@ def hirschberg(seq1: str, seq2: str,
             return "-" * miglior_j + x[0] + "-" * (m - miglior_j - 1), y
 
     def _hirschberg_ricorsivo(x: str, y: str) -> tuple:
-        """Divide et impera: divide x a metà, trova il taglio ottimo su y."""
         n, m = len(x), len(y)
 
         # Casi base
@@ -148,9 +123,8 @@ def hirschberg(seq1: str, seq2: str,
 # ── Tabella comparativa ──────────────────────────────────────────────────────
 
 def stampa_confronto_complessita() -> None:
-    """Tabella delle complessità dei tre algoritmi."""
     print("\n" + "=" * 75)
-    print("  📊 CONFRONTO DELLE COMPLESSITÀ")
+    print("CONFRONTO DELLE COMPLESSITÀ")
     print("=" * 75)
 
     headers = ["Algoritmo", "Tempo", "Spazio", "Output"]
@@ -161,11 +135,10 @@ def stampa_confronto_complessita() -> None:
     ]
     print(tabulate(dati, headers=headers, tablefmt="fancy_grid",
                    stralign="center", numalign="center"))
-    print("\n  💡 Hirschberg ha costante ~2× nel tempo (ricorsione).\n")
+    print("\nHirschberg ha costante ~2× nel tempo (ricorsione).\n")
 
 
 def stampa_confronto_memoria(n: int, m: int) -> None:
-    """Confronto concreto dell'uso di memoria per dimensioni date."""
     mem_base = (n + 1) * (m + 1) * 8
     mem_lineare = 2 * (min(n, m) + 1) * 8
 
@@ -176,7 +149,7 @@ def stampa_confronto_memoria(n: int, m: int) -> None:
         else:              return f"{b / (1024**3):.1f} GB"
 
     rapporto = mem_base / mem_lineare if mem_lineare > 0 else float('inf')
-    print(f"\n  📏 Confronto memoria per n={n}, m={m}:")
+    print(f"\nConfronto memoria per n={n}, m={m}:")
     print(f"     • NW Base:        {formatta_byte(mem_base)}")
     print(f"     • Spazio lineare: {formatta_byte(mem_lineare)}")
     print(f"     • Riduzione:      {rapporto:.0f}×\n")
@@ -208,7 +181,7 @@ if __name__ == "__main__":
     score_hir, a1_hir, a2_hir = hirschberg(seq1, seq2, MATCH, MISMATCH, GAP)
 
     assert score_base == score_lin == score_hir
-    print(f"\n  ✅ Score: {score_base} (tutti concordi)")
+    print(f"\nScore: {score_base} (tutti concordi)")
     print(f"  NW Base:     {a1_base} / {a2_base}")
     print(f"  Hirschberg:  {a1_hir} / {a2_hir}")
 
@@ -222,7 +195,7 @@ if __name__ == "__main__":
     sl = nw_score_lineare(seq1_b, seq2_b, MATCH, MISMATCH, GAP)
     sh, ah1, ah2 = hirschberg(seq1_b, seq2_b, MATCH, MISMATCH, GAP)
     assert sb == sl == sh
-    print(f"  ✅ Score: {sb} (tutti concordi)")
+    print(f"Score: {sb} (tutti concordi)")
     print(f"  Hirschberg: {ah1} / {ah2}")
 
     # TEST 3: Prestazioni
@@ -271,13 +244,13 @@ if __name__ == "__main__":
 
     t0 = time.perf_counter()
     sg = nw_score_lineare(s1g, s2g, MATCH, MISMATCH, GAP)
-    print(f"\n  ✅ NW Lineare: score={sg}, tempo={time.perf_counter()-t0:.2f}s")
+    print(f"\nNW Lineare: score={sg}, tempo={time.perf_counter()-t0:.2f}s")
 
     t0 = time.perf_counter()
     sgh, _, _ = hirschberg(s1g, s2g, MATCH, MISMATCH, GAP)
-    print(f"  ✅ Hirschberg: score={sgh}, tempo={time.perf_counter()-t0:.2f}s")
+    print(f"Hirschberg: score={sgh}, tempo={time.perf_counter()-t0:.2f}s")
 
     assert sg == sgh
     print("\n" + "=" * 75)
-    print("  ✅ Tutti i test completati con successo")
+    print("Tutti i test completati con successo")
     print("=" * 75)
