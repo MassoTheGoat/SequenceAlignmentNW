@@ -64,23 +64,6 @@ def hirschberg(seq1: str, seq2: str,
                match: int = 1, mismatch: int = -1,
                gap: int = -2) -> tuple:
 
-    def _allinea_singolo_carattere(x: str, y: str) -> tuple:
-        m = len(y)
-        miglior_score = (m + 1) * gap
-        miglior_j = -1
-
-        for j in range(m):
-            s = match if x[0] == y[j] else mismatch
-            score_j = j * gap + s + (m - j - 1) * gap
-            if score_j > miglior_score:
-                miglior_score = score_j
-                miglior_j = j
-
-        if miglior_j == -1:
-            return "-" * m + x[0], y + "-"
-        else:
-            return "-" * miglior_j + x[0] + "-" * (m - miglior_j - 1), y
-
     def _hirschberg_ricorsivo(x: str, y: str) -> tuple:
         n, m = len(x), len(y)
 
@@ -89,10 +72,11 @@ def hirschberg(seq1: str, seq2: str,
             return "-" * m, y
         if m == 0:
             return x, "-" * n
-        if n == 1:
-            return _allinea_singolo_carattere(x, y)
-        if m == 1:
-            a2, a1 = _allinea_singolo_carattere(y, x)
+
+        # Per matrici 1 x m o n x 1 la matrice DP completa è minuscola (O(m) o O(n))
+        # e non viola lo spazio lineare.
+        if n == 1 or m == 1:
+            _, a1, a2, _ = needleman_wunsch(x, y, match, mismatch, gap)
             return a1, a2
 
         # Divide: split di x a metà
